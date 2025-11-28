@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sphere Suite - Audio Plugin</title>
+    <style>
+        /* Page Setup */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Plugin Window */
+        .plugin-container {
+            width: 1100px;
+            height: 600px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                        0 0 80px rgba(123, 63, 242, 0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Bar */
+        .header {
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a28 100%);
+            border-bottom: 1px solid rgba(123, 63, 242, 0.2);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plugin-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        .panel-name {
+            font-size: 13px;
+            color: #888;
+            font-weight: 400;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .power-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2c2c2c;
+            border: 2px solid #444;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .power-icon:hover {
+            border-color: #00d4aa;
+            box-shadow: 0 0 8px rgba(0, 212, 170, 0.5);
+        }
+
+        .preset-label {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Top Menu Bar */
+        .top-menu {
+            padding: 8px 24px;
+            display: flex;
+            gap: 16px;
+            border-bottom: 1px solid rgba(123, 63, 242, 0.1);
+        }
+
+        .menu-item {
+            font-size: 11px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-item:hover {
+            color: #7b3ff2;
+        }
+
+        /* Left Main Panel */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        .left-sidebar {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .left-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .left-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .left-sidebar::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        .left-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #7b3ff2;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid #3a3a4a;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(123, 63, 242, 0.08);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .info-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #7b3ff2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-title::before {
+            content: 'ℹ';
+            font-size: 12px;
+            width: 16px;
+            height: 16px;
+            background: rgba(123, 63, 242, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .info-content {
+            font-size: 10px;
+            line-height: 1.6;
+            color: #999;
+            flex: 1;
+        }
+
+        .info-item {
+            display: none;
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-item.active {
+            display: block;
+        }
+
+        .info-item strong {
+            color: #7b3ff2;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Hover Info States */
+        .btn-listen:hover ~ .left-panel .info-item-listen,
+        .btn-ab:hover ~ .left-panel .info-item-ab,
+        .btn-channel-master:hover ~ .left-panel .info-item-channel,
+        .btn-mode:hover ~ .left-panel .info-item-mode {
+            display: block;
+        }
+
+        body:has(.btn-listen:hover) .info-item-default { display: none; }
+        body:has(.btn-listen:hover) .info-item-listen { display: block; }
+        body:has(.btn-ab:hover) .info-item-default { display: none; }
+        body:has(.btn-ab:hover) .info-item-ab { display: block; }
+        body:has(.btn-channel-master:hover) .info-item-default { display: none; }
+        body:has(.btn-channel-master:hover) .info-item-channel { display: block; }
+        body:has(.btn-mode:hover) .info-item-default { display: none; }
+        body:has(.btn-mode:hover) .info-item-mode { display: block; }
+        body:has(.analysis-panel:hover) .info-item-default { display: none; }
+        body:has(.analysis-panel:hover) .info-item-analysis { display: block; }
+        body:has(.module-card:hover) .info-item-default { display: none; }
+        body:has(.module-card:hover) .info-item-module { display: block; }
+        body:has(.module-settings-icon:hover) .info-item-default { display: none; }
+        body:has(.module-settings-icon:hover) .info-item-settings { display: block; }
+        body:has(.chat-panel:hover) .info-item-default { display: none; }
+        body:has(.chat-panel:hover) .info-item-chat { display: block; }
+        body:has(.menu-item:hover) .info-item-default { display: none; }
+        body:has(.menu-item:hover) .info-item-menu { display: block; }
+        body:has(.power-icon:hover) .info-item-default { display: none; }
+        body:has(.power-icon:hover) .info-item-power { display: block; }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        .panel-content {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            flex: 1;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        /* Control Buttons Section */
+        .control-buttons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px;
+            border-bottom: 1px solid rgba(123, 63, 242, 0.1);
+        }
+
+        .button-group-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .button-group-left .btn-ab {
+            margin-right: 8px;
+        }
+
+        .button-group-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-mode {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #2a2a3a 0%, #242434 100%);
+            color: #aaa;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #3a3a4a;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-mode:hover {
+            background: linear-gradient(135deg, #7b3ff2 0%, #5e2eb8 100%);
+            color: #fff;
+            border-color: #7b3ff2;
+            box-shadow: 0 2px 12px rgba(123, 63, 242, 0.4);
+        }
+
+        .btn-mode.active {
+            background: linear-gradient(135deg, #7b3ff2 0%, #5e2eb8 100%);
+            color: #fff;
+            border-color: #7b3ff2;
+        }
+
+        .btn-channel-master {
+            padding: 10px 20px;
+            background: #2a2a3a;
+            color: #888;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #3a3a4a;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-channel-master:hover {
+            background: #3a3a4a;
+            color: #aaa;
+        }
+
+        .btn-channel-master.active {
+            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            color: #fff;
+            border-color: #00d4aa;
+            box-shadow: 0 2px 8px rgba(0, 212, 170, 0.4);
+        }
+
+
+        .btn-listen {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.6),
+                        0 0 40px rgba(0, 212, 170, 0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 20px rgba(0, 212, 170, 0.6),
+                            0 0 40px rgba(0, 212, 170, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 30px rgba(0, 212, 170, 0.8),
+                            0 0 60px rgba(0, 212, 170, 0.5);
+            }
+        }
+
+        .btn-listen:hover {
+            background: linear-gradient(135deg, #00f5c4 0%, #00d4aa 100%);
+            box-shadow: 0 6px 30px rgba(0, 212, 170, 0.8),
+                        0 0 80px rgba(0, 212, 170, 0.6);
+            transform: scale(1.08);
+            animation: none;
+        }
+
+        .btn-listen::before,
+        .btn-listen::after {
+            content: '';
+            position: absolute;
+            border: 2px solid #fff;
+            border-radius: 50%;
+        }
+
+        .btn-listen::before {
+            width: 12px;
+            height: 12px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+        }
+
+        .btn-listen::after {
+            width: 24px;
+            height: 24px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            animation: ripple 1.5s ease-out infinite;
+        }
+
+        @keyframes ripple {
+            0% {
+                width: 24px;
+                height: 24px;
+                opacity: 1;
+            }
+            100% {
+                width: 48px;
+                height: 48px;
+                opacity: 0;
+            }
+        }
+
+        .signal-waves {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .signal-wave {
+            position: absolute;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: wave 2s ease-out infinite;
+        }
+
+        .signal-wave:nth-child(1) {
+            width: 35px;
+            height: 35px;
+            animation-delay: 0s;
+        }
+
+        .signal-wave:nth-child(2) {
+            width: 35px;
+            height: 35px;
+            animation-delay: 0.5s;
+        }
+
+        .signal-wave:nth-child(3) {
+            width: 35px;
+            height: 35px;
+            animation-delay: 1s;
+        }
+
+        @keyframes wave {
+            0% {
+                width: 35px;
+                height: 35px;
+                opacity: 0.8;
+            }
+            100% {
+                width: 70px;
+                height: 70px;
+                opacity: 0;
+            }
+        }
+
+        .btn-ab {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #7b3ff2 0%, #5e2eb8 100%);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(123, 63, 242, 0.5);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-ab:hover {
+            background: linear-gradient(135deg, #8f5bff 0%, #7043d4 100%);
+            box-shadow: 0 4px 20px rgba(123, 63, 242, 0.7);
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        /* Analysis Results Panel */
+        .analysis-panel {
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid #2e2e3e;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(0, 212, 170, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .analysis-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #00d4aa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .analysis-results {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .result-item {
+            font-size: 11px;
+            color: #bbb;
+            padding-left: 12px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .result-item::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #00d4aa;
+            font-weight: bold;
+            font-size: 10px;
+        }
+
+        /* Module Cards Section */
+        .modules-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 8px;
+        }
+
+        .modules-section {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1fr;
+            overflow-x: hidden;
+        }
+
+        .module-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #242424 100%);
+            border: 1px solid #3a3a3a;
+            border-radius: 14px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .module-card:hover {
+            border-color: #00d4aa;
+            box-shadow: 0 4px 16px rgba(0, 212, 170, 0.35),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                        0 0 20px rgba(0, 212, 170, 0.25),
+                        0 0 30px rgba(0, 212, 170, 0.2),
+                        0 0 40px rgba(0, 212, 170, 0.15);
+        }
+
+        .module-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border-radius: 12px;
+            border: 1px solid #3a3a3a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-icon-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background: conic-gradient(from 0deg, transparent, #00d4aa, transparent 90deg);
+            animation: rotate 3s linear infinite;
+        }
+
+        .module-icon-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border-radius: 10px;
+        }
+
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+
+        .module-icon {
+            position: relative;
+            z-index: 1;
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke: #00d4aa;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 8px rgba(0, 212, 170, 0.6));
+        }
+
+        .module-content {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .module-description-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .module-description {
+            font-size: 11px;
+            line-height: 1.6;
+            color: #aaa;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .module-params-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+
+        .module-params-wrapper {
+            width: 200px;
+            padding-left: 20px;
+            border-left: 1px solid #3a3a3a;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .module-params {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .param-item {
+            font-size: 10px;
+            color: #888;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .param-label {
+            color: #00d4aa;
+            font-weight: 600;
+        }
+
+        .module-header {
+            margin-bottom: 10px;
+        }
+
+        .module-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #00d4aa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .module-settings-icon {
+            width: 48px;
+            height: 48px;
+            background: #3a3a3a;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            border: none;
+        }
+
+        label.module-settings-icon {
+            cursor: pointer;
+        }
+
+        .module-settings-icon:hover {
+            background: #7b3ff2;
+            box-shadow: 0 0 16px rgba(123, 63, 242, 0.6);
+        }
+
+        .module-settings-icon::before {
+            content: '⚙';
+            font-size: 24px;
+            color: #aaa;
+        }
+
+        .module-settings-icon:hover::before {
+            color: #fff;
+        }
+
+
+        /* Right Chat Panel */
+        .chat-panel {
+            width: 280px;
+            min-width: 280px;
+            max-width: 280px;
+            background: #1a1a1a;
+            border-left: 1px solid #2a2a2a;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-toggle-icon {
+            width: 24px;
+            height: 24px;
+            background: #2c2c2c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .chat-toggle-icon:hover {
+            background: #7b3ff2;
+            box-shadow: 0 0 12px rgba(123, 63, 242, 0.5);
+        }
+
+        .chat-toggle-icon::before {
+            content: '×';
+            font-size: 20px;
+            color: #aaa;
+            font-weight: bold;
+        }
+
+        .chat-toggle-icon:hover::before {
+            color: #fff;
+        }
+
+        .chat-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.3px;
+            flex: 1;
+        }
+
+        /* Messages Area */
+        .messages-container {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+
+        .message.system {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            padding: 12px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.system .message-bubble {
+            background: #262626;
+            color: #ddd;
+            border: 1px solid #2e2e2e;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #7b3ff2 0%, #5e2eb8 100%);
+            color: #fff;
+        }
+
+        .message-label {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        /* Chat Input Area */
+        .chat-input-container {
+            padding: 16px 20px;
+            border-top: 1px solid #2a2a2a;
+            background: #1a1a1a;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .chat-input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 14px;
+            background: #262626;
+            border: 1px solid #2e2e2e;
+            border-radius: 20px;
+            color: #ddd;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #7b3ff2;
+            box-shadow: 0 0 0 2px rgba(123, 63, 242, 0.2);
+        }
+
+        .chat-input::placeholder {
+            color: #666;
+        }
+
+        .btn-send {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #7b3ff2 0%, #5e2eb8 100%);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(123, 63, 242, 0.3);
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover {
+            background: linear-gradient(135deg, #8f5bff 0%, #7043d4 100%);
+            box-shadow: 0 4px 12px rgba(123, 63, 242, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        .messages-container::-webkit-scrollbar,
+        .modules-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar-track,
+        .modules-container::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+            margin-right: 4px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb,
+        .modules-container::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+            border-right: 3px solid transparent;
+            background-clip: padding-box;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #7b3ff2;
+            background-clip: padding-box;
+        }
+        
+        .modules-container::-webkit-scrollbar-thumb:hover {
+            background: #00d4aa;
+            background-clip: padding-box;
+        }
+
+        /* Modal System */
+        .modal-trigger {
+            display: none;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-trigger:checked + .modal-overlay {
+            display: flex;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            cursor: pointer;
+        }
+
+        .plugin-modal {
+            width: 900px;
+            height: 550px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
+                        0 0 100px rgba(123, 63, 242, 0.2);
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .plugin-modal-header {
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a28 100%);
+            border-bottom: 1px solid rgba(123, 63, 242, 0.2);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .plugin-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .plugin-modal-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #3a3a3a;
+        }
+
+        .plugin-modal-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: #00d4aa;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            background: #2a2a3a;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #3a3a4a;
+        }
+
+        .modal-close:hover {
+            background: #7b3ff2;
+            border-color: #7b3ff2;
+            box-shadow: 0 0 12px rgba(123, 63, 242, 0.5);
+        }
+
+        .modal-close::before {
+            content: '×';
+            font-size: 24px;
+            color: #aaa;
+            font-weight: bold;
+        }
+
+        .modal-close:hover::before {
+            color: #fff;
+        }
+
+        .plugin-modal-content {
+            flex: 1;
+            padding: 20px 28px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* EQ Plugin Specific */
+        .eq-curve-area {
+            background: linear-gradient(135deg, #0f0f1e 0%, #0a0a18 100%);
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .eq-grid {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 40px;
+            right: 20px;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0, 212, 170, 0.1) 39px, rgba(0, 212, 170, 0.1) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(0, 212, 170, 0.1) 79px, rgba(0, 212, 170, 0.1) 80px);
+        }
+
+        .eq-curve {
+            position: absolute;
+            left: 5%;
+            right: 5%;
+            bottom: 40px;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .eq-curve svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .eq-curve path {
+            fill: none;
+            stroke: #00d4aa;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 8px rgba(0, 212, 170, 0.8)) drop-shadow(0 0 16px rgba(0, 212, 170, 0.4));
+        }
+
+        .eq-frequency-labels {
+            position: absolute;
+            bottom: 10px;
+            left: 40px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #666;
+        }
+
+        .eq-db-labels {
+            position: absolute;
+            left: 8px;
+            top: 20px;
+            bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #666;
+        }
+
+        .eq-curve-area .eq-curve {
+            left: 40px;
+            right: 20px;
+        }
+
+        .eq-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .eq-band {
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border: 1px solid #2e2e3e;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .eq-band-title {
+            font-size: 9px;
+            font-weight: 700;
+            color: #00d4aa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .eq-band-params {
+            display: flex;
+            gap: 8px;
+        }
+
+        .eq-band-params.horizontal {
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .eq-band-params.vertical {
+            flex-direction: column;
+        }
+
+        .eq-param {
+            margin-bottom: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .eq-param-label {
+            font-size: 8px;
+            color: #888;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .eq-knob {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a0a18 0%, #0f0f1e 100%);
+            border: 2px solid #2a2a3a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5),
+                        inset 0 2px 3px rgba(255, 255, 255, 0.05);
+        }
+
+        .eq-knob::before {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 22px;
+            background: linear-gradient(180deg, #00d4aa 0%, transparent 100%);
+            top: 6px;
+            border-radius: 2px;
+            box-shadow: 0 0 6px rgba(0, 212, 170, 0.8);
+            transform-origin: center 16.5px;
+            transform: rotate(-45deg);
+        }
+
+        .eq-knob.rotate-0::before {
+            transform: rotate(0deg);
+        }
+
+        .eq-knob.rotate-45::before {
+            transform: rotate(45deg);
+        }
+
+        .eq-knob.rotate-90::before {
+            transform: rotate(90deg);
+        }
+
+        .eq-knob.rotate-minus-90::before {
+            transform: rotate(-90deg);
+        }
+
+        .eq-knob.rotate-135::before {
+            transform: rotate(135deg);
+        }
+
+        .eq-knob.rotate-minus-45::before {
+            transform: rotate(-45deg);
+        }
+
+        .eq-knob.active-low {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.05),
+                        0 0 30px rgba(0, 212, 170, 0.6),
+                        0 0 50px rgba(0, 212, 170, 0.3);
+            border-color: #00d4aa;
+        }
+
+        .eq-knob.active-high {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.05),
+                        0 0 40px rgba(0, 212, 170, 0.8),
+                        0 0 60px rgba(0, 212, 170, 0.4);
+            border-color: #00f5c4;
+        }
+
+        .eq-knob.active-high::before {
+            box-shadow: 0 0 16px rgba(0, 212, 170, 1);
+        }
+
+        .eq-param-value {
+            font-size: 11px;
+            color: #00d4aa;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .eq-dropdown {
+            width: 100%;
+            padding: 6px 10px;
+            background: linear-gradient(135deg, #0a0a18 0%, #0f0f1e 100%);
+            border: 2px solid #2a2a3a;
+            border-radius: 6px;
+            color: #00d4aa;
+            font-size: 10px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .eq-dropdown:hover {
+            border-color: #00d4aa;
+            box-shadow: 0 0 12px rgba(0, 212, 170, 0.3);
+        }
+
+        /* Comp Plugin Specific */
+        .comp-waveform-area {
+            background: linear-gradient(135deg, #0f0f1e 0%, #0a0a18 100%);
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            height: 280px;
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+            padding-left: 35px;
+        }
+
+        .comp-waveform {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .comp-waveform-grid {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 35px;
+            right: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(123, 63, 242, 0.1) 39px, rgba(123, 63, 242, 0.1) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 59px, rgba(123, 63, 242, 0.1) 59px, rgba(123, 63, 242, 0.1) 60px);
+        }
+
+        .comp-db-labels {
+            position: absolute;
+            left: 10px;
+            top: 30px;
+            bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 9px;
+            color: #666;
+        }
+
+        .comp-waveform svg {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .comp-wave-input {
+            fill: none;
+            stroke: #888;
+            stroke-width: 2;
+            opacity: 0.4;
+        }
+
+        .comp-wave-output {
+            fill: none;
+            stroke: #00d4aa;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 6px rgba(0, 212, 170, 0.6));
+        }
+
+        .comp-wave-labels {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 2;
+        }
+
+        .comp-wave-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .comp-wave-label-line {
+            width: 20px;
+            height: 2px;
+        }
+
+        .comp-wave-label-line.input {
+            background: #888;
+        }
+
+        .comp-wave-label-line.output {
+            background: #00d4aa;
+            box-shadow: 0 0 4px rgba(0, 212, 170, 0.6);
+        }
+
+        .comp-controls {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .comp-param {
+            background: linear-gradient(135deg, #1e1e2e 0%, #1a1a28 100%);
+            border: 1px solid #2e2e3e;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .comp-param-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #00d4aa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .comp-knob {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a0a18 0%, #0f0f1e 100%);
+            border: 3px solid #2a2a3a;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6),
+                        inset 0 2px 4px rgba(255, 255, 255, 0.05);
+        }
+
+        .comp-knob::before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, #00d4aa 0%, transparent 100%);
+            top: 8px;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(0, 212, 170, 0.8);
+            transform-origin: center 21px;
+            transform: rotate(-45deg);
+        }
+
+        .comp-knob.rotate-0::before {
+            transform: rotate(0deg);
+        }
+
+        .comp-knob.rotate-45::before {
+            transform: rotate(45deg);
+        }
+
+        .comp-knob.rotate-90::before {
+            transform: rotate(90deg);
+        }
+
+        .comp-knob.rotate-minus-90::before {
+            transform: rotate(-90deg);
+        }
+
+        .comp-knob.rotate-135::before {
+            transform: rotate(135deg);
+        }
+
+        .comp-knob.rotate-minus-45::before {
+            transform: rotate(-45deg);
+        }
+
+        .comp-knob.threshold-active {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6),
+                        inset 0 2px 6px rgba(255, 255, 255, 0.05),
+                        0 0 40px rgba(0, 212, 170, 0.7),
+                        0 0 60px rgba(0, 212, 170, 0.4);
+            border-color: #00d4aa;
+        }
+
+        .comp-knob.threshold-active::before {
+            box-shadow: 0 0 20px rgba(0, 212, 170, 1);
+        }
+
+        .comp-knob.ratio-active {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6),
+                        inset 0 2px 6px rgba(255, 255, 255, 0.05),
+                        0 0 35px rgba(0, 212, 170, 0.6),
+                        0 0 55px rgba(0, 212, 170, 0.3);
+            border-color: #00d4aa;
+        }
+
+        .comp-knob.ratio-active::before {
+            box-shadow: 0 0 16px rgba(0, 212, 170, 0.9);
+        }
+
+        .comp-knob.timing-active {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6),
+                        inset 0 2px 6px rgba(255, 255, 255, 0.05),
+                        0 0 25px rgba(0, 212, 170, 0.5),
+                        0 0 45px rgba(0, 212, 170, 0.2);
+            border-color: #00c49a;
+        }
+
+        .comp-knob.timing-active::before {
+            box-shadow: 0 0 12px rgba(0, 212, 170, 0.8);
+        }
+
+        .comp-param-value {
+            font-size: 16px;
+            color: #00d4aa;
+            font-weight: 700;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        .comp-param-desc {
+            font-size: 8px;
+            color: #777;
+            line-height: 1.3;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Plugin Container -->
+    <div class="plugin-container">
+        
+        <!-- Header Bar -->
+        <header class="header">
+            <div class="header-left">
+                <span class="plugin-title">Sphere Suite</span>
+                <span class="panel-name">by Sphere DSP</span>
+            </div>
+            <div class="header-right">
+                <div class="power-icon"></div>
+                <span class="preset-label">Preset: Default</span>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            
+            <!-- Left Main Panel -->
+            <main class="left-panel">
+
+                <!-- Top Menu -->
+                <div class="top-menu">
+                    <div class="menu-item">Tutorial</div>
+                    <div class="menu-item">License</div>
+                    <div class="menu-item">About</div>
+                </div>
+                
+                <!-- Control Buttons -->
+                <section class="control-buttons">
+                    <div class="button-group-left">
+                        <button class="btn-listen">
+                            <div class="signal-waves">
+                                <div class="signal-wave"></div>
+                                <div class="signal-wave"></div>
+                                <div class="signal-wave"></div>
+                            </div>
+                        </button>
+                        <button class="btn-ab">A/B</button>
+                        <button class="btn-channel-master active">Channel</button>
+                        <button class="btn-channel-master">Master</button>
+                    </div>
+                    <div class="button-group-right">
+                        <button class="btn-mode active">Suggestion Mode</button>
+                        <button class="btn-mode">Agent Mode</button>
+                    </div>
+                </section>
+
+                <div class="panel-content">
+                    <!-- Left Sidebar -->
+                    <div class="left-sidebar">
+                        <!-- Analysis Results Panel -->
+                        <section class="analysis-panel">
+                            <h2 class="analysis-title">Analysis</h2>
+                            <div class="analysis-results">
+                                <div class="result-item">Low freq strong</div>
+                                <div class="result-item">Unstable dynamics</div>
+                                <div class="result-item">No clipping</div>
+                                <div class="result-item">Stereo balanced</div>
+                                <div class="result-item">Transients OK</div>
+                            </div>
+                        </section>
+
+                        <!-- Info Panel -->
+                        <section class="info-panel">
+                            <h3 class="info-title">Info</h3>
+                            <div class="info-content">
+                                <div class="info-item info-item-default active">
+                                    Hover over any element to learn more about its function.
+                                </div>
+                                <div class="info-item info-item-listen">
+                                    <strong>Listen Button:</strong> Preview the processed audio with all applied effects. This is your main playback control.
+                                </div>
+                                <div class="info-item info-item-ab">
+                                    <strong>A/B Test:</strong> Quickly compare the processed audio (A) with the original unprocessed version (B).
+                                </div>
+                                <div class="info-item info-item-channel">
+                                    <strong>Channel/Master:</strong> Select whether this plugin chain is applied to individual channels or the master output.
+                                </div>
+                                <div class="info-item info-item-mode">
+                                    <strong>Mode Selection:</strong> Switch between Suggestion Mode (AI recommends changes) and Agent Mode (AI applies changes automatically).
+                                </div>
+                                <div class="info-item info-item-analysis">
+                                    <strong>Analysis Panel:</strong> Shows real-time audio analysis results including frequency balance, dynamics, clipping detection, and stereo imaging.
+                                </div>
+                                <div class="info-item info-item-module">
+                                    <strong>Plugin Module:</strong> Each module represents an applied audio processor. Click to open detailed controls and visualizations.
+                                </div>
+                                <div class="info-item info-item-settings">
+                                    <strong>Settings:</strong> Access advanced parameters and fine-tune the plugin's behavior for this specific module.
+                                </div>
+                                <div class="info-item info-item-chat">
+                                    <strong>Assistant Chat:</strong> Communicate with your AI mixing assistant. Describe what you want to achieve and get real-time suggestions.
+                                </div>
+                                <div class="info-item info-item-menu">
+                                    <strong>Menu Options:</strong> Access tutorials, license information, and about page. Essential documentation and support resources.
+                                </div>
+                                <div class="info-item info-item-power">
+                                    <strong>Power Control:</strong> Enable or disable the entire plugin. Useful for A/B comparisons and CPU management.
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Main Area with Module Cards -->
+                    <div class="main-area">
+                        <div class="modules-container">
+                            <section class="modules-section">
+                                <div class="module-card">
+                                    <div class="module-icon-wrapper">
+                                        <svg class="module-icon" viewBox="0 0 24 24">
+                                            <path d="M3 12h3M18 12h3M12 3v3M12 18v3M8 8l2 2M16 16l-2-2M8 16l2-2M16 8l-2 2"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </div>
+                                    <div class="module-content">
+                                        <div class="module-description-section">
+                                            <div class="module-header">
+                                                <div class="module-name">Sphere EQ</div>
+                                            </div>
+                                            <div class="module-description">
+                                                Applied gentle low-shelf cut to remove muddiness and clean up the low-mid region. This creates more space and clarity in the mix.
+                                            </div>
+                                        </div>
+                                        <div class="module-params-section">
+                                            <div class="module-params-wrapper">
+                                                <div class="module-params">
+                                                    <div class="param-item"><span class="param-label">Low Shelf:</span> -2.8 dB @ 140 Hz</div>
+                                                    <div class="param-item"><span class="param-label">Q Factor:</span> 0.71</div>
+                                                    <div class="param-item"><span class="param-label">Type:</span> Baxandall</div>
+                                                </div>
+                                            </div>
+                                            <label for="modal-eq-1" class="module-settings-icon"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="module-card">
+                                    <div class="module-icon-wrapper">
+                                        <svg class="module-icon" viewBox="0 0 24 24">
+                                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                            <path d="M8 12h8M12 8v8"/>
+                                        </svg>
+                                    </div>
+                                    <div class="module-content">
+                                        <div class="module-description-section">
+                                            <div class="module-header">
+                                                <div class="module-name">Sphere Comp</div>
+                                            </div>
+                                            <div class="module-description">
+                                                Tamed dynamic peaks and controlled transients with smooth gain reduction. This ensures consistent levels throughout loud sections while maintaining natural dynamics.
+                                            </div>
+                                        </div>
+                                        <div class="module-params-section">
+                                            <div class="module-params-wrapper">
+                                                <div class="module-params">
+                                                    <div class="param-item"><span class="param-label">Threshold:</span> -12 dB</div>
+                                                    <div class="param-item"><span class="param-label">Ratio:</span> 3.3:1</div>
+                                                    <div class="param-item"><span class="param-label">Attack:</span> 5 ms</div>
+                                                    <div class="param-item"><span class="param-label">Release:</span> 80 ms</div>
+                                                </div>
+                                            </div>
+                                            <label for="modal-comp-1" class="module-settings-icon"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="module-card">
+                                    <div class="module-icon-wrapper">
+                                        <svg class="module-icon" viewBox="0 0 24 24">
+                                            <path d="M3 12h3M18 12h3M12 3v3M12 18v3M8 8l2 2M16 16l-2-2M8 16l2-2M16 8l-2 2"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    </div>
+                                    <div class="module-content">
+                                        <div class="module-description-section">
+                                            <div class="module-header">
+                                                <div class="module-name">Sphere EQ</div>
+                                            </div>
+                                            <div class="module-description">
+                                                Added presence boost in high-mids to increase clarity and vocal brightness. This enhances articulation without harshness.
+                                            </div>
+                                        </div>
+                                        <div class="module-params-section">
+                                            <div class="module-params-wrapper">
+                                                <div class="module-params">
+                                                    <div class="param-item"><span class="param-label">High Shelf:</span> +3.2 dB @ 6 kHz</div>
+                                                    <div class="param-item"><span class="param-label">Q Factor:</span> 0.85</div>
+                                                    <div class="param-item"><span class="param-label">Type:</span> Bell</div>
+                                                </div>
+                                            </div>
+                                            <label for="modal-eq-2" class="module-settings-icon"></label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                </div>
+
+            </main>
+
+            <!-- Right Chat Panel -->
+            <aside class="chat-panel">
+                
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="chat-toggle-icon"></div>
+                    <h2 class="chat-title">Assistant Chat</h2>
+                </div>
+
+                <!-- Messages Area -->
+                <div class="messages-container">
+                    
+                    <div class="message system">
+                        <span class="message-label">Assistant</span>
+                        <div class="message-bubble">
+                            Hi, I am your mixing copilot. I will explain the changes I make.
+                        </div>
+                    </div>
+
+                    <div class="message user">
+                        <span class="message-label">User</span>
+                        <div class="message-bubble">
+                            Make the vocals a little brighter but keep the low end warm.
+                        </div>
+                    </div>
+
+                    <div class="message system">
+                        <span class="message-label">Assistant</span>
+                        <div class="message-bubble">
+                            Understood. I boosted presence around 4 kHz on the vocal bus and kept the bass range untouched.
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Chat Input Area -->
+                <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                        <input type="text" class="chat-input" placeholder="Type a mix request…">
+                        <button class="btn-send">Send</button>
+                    </div>
+                </div>
+
+            </aside>
+
+        </div>
+
+    </div>
+
+    <!-- Modal: Sphere EQ 1 -->
+    <input type="checkbox" id="modal-eq-1" class="modal-trigger">
+    <div class="modal-overlay">
+        <label for="modal-eq-1" class="modal-backdrop"></label>
+        <div class="plugin-modal">
+            <div class="plugin-modal-header">
+                <div class="plugin-modal-title">
+                    <div class="plugin-modal-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 12h3M18 12h3M12 3v3M12 18v3M8 8l2 2M16 16l-2-2M8 16l2-2M16 8l-2 2"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <span>Sphere EQ - Low Shelf</span>
+                </div>
+                <label for="modal-eq-1" class="modal-close"></label>
+            </div>
+            <div class="plugin-modal-content">
+                <div class="eq-curve-area">
+                    <div class="eq-grid"></div>
+                    <div class="eq-db-labels">
+                        <span>+12</span>
+                        <span>+6</span>
+                        <span>0</span>
+                        <span>-6</span>
+                        <span>-12</span>
+                    </div>
+                    <div class="eq-curve">
+                        <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                            <path d="M 0 180 L 80 180 Q 120 165 160 150 L 280 150 L 320 145 Q 380 135 440 135 L 560 135 Q 620 120 680 100 L 800 80" />
+                        </svg>
+                    </div>
+                    <div class="eq-frequency-labels">
+                        <span>20</span>
+                        <span>50</span>
+                        <span>100</span>
+                        <span>200</span>
+                        <span>500</span>
+                        <span>1k</span>
+                        <span>2k</span>
+                        <span>5k</span>
+                        <span>10k</span>
+                        <span>20k</span>
+                    </div>
+                </div>
+                <div class="eq-controls">
+                    <div class="eq-band">
+                        <div class="eq-band-title">Low Shelf</div>
+                        <div class="eq-band-params horizontal">
+                            <div class="eq-param">
+                                <div class="eq-param-label">Frequency</div>
+                                <div class="eq-knob rotate-minus-90"></div>
+                                <div class="eq-param-value">140 Hz</div>
+                            </div>
+                            <div class="eq-param">
+                                <div class="eq-param-label">Gain</div>
+                                <div class="eq-knob active-low rotate-minus-90"></div>
+                                <div class="eq-param-value">-2.8 dB</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eq-band">
+                        <div class="eq-band-title">Q Factor</div>
+                        <div class="eq-band-params horizontal">
+                            <div class="eq-param">
+                                <div class="eq-param-label">Quality</div>
+                                <div class="eq-knob rotate-0"></div>
+                                <div class="eq-param-value">0.71</div>
+                            </div>
+                            <div class="eq-param">
+                                <div class="eq-param-label">Bandwidth</div>
+                                <div class="eq-knob rotate-45"></div>
+                                <div class="eq-param-value">1.89 Oct</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eq-band">
+                        <div class="eq-band-title">Filter Type</div>
+                        <div class="eq-band-params vertical">
+                            <div class="eq-param">
+                                <div class="eq-param-label">Type</div>
+                                <div class="eq-dropdown">Low Shelf</div>
+                            </div>
+                            <div class="eq-param">
+                                <div class="eq-param-label">Slope</div>
+                                <div class="eq-dropdown">12 dB/Oct</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sphere Comp -->
+    <input type="checkbox" id="modal-comp-1" class="modal-trigger">
+    <div class="modal-overlay">
+        <label for="modal-comp-1" class="modal-backdrop"></label>
+        <div class="plugin-modal">
+            <div class="plugin-modal-header">
+                <div class="plugin-modal-title">
+                    <div class="plugin-modal-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <path d="M8 12h8M12 8v8"/>
+                        </svg>
+                    </div>
+                    <span>Sphere Comp - Dynamic Control</span>
+                </div>
+                <label for="modal-comp-1" class="modal-close"></label>
+            </div>
+            <div class="plugin-modal-content">
+                <div class="comp-waveform-area">
+                    <div class="comp-waveform-grid"></div>
+                    <div class="comp-db-labels">
+                        <span>+12</span>
+                        <span>+6</span>
+                        <span>0</span>
+                        <span>-6</span>
+                        <span>-12</span>
+                    </div>
+                    <div class="comp-waveform">
+                        <svg viewBox="0 0 800 200" preserveAspectRatio="none">
+                            <!-- Input waveform (gray, dynamic) -->
+                            <path class="comp-wave-input" d="M 0 100 Q 50 65 100 75 T 200 85 T 300 65 T 400 95 T 500 75 T 600 85 T 700 70 T 800 85" />
+                            <!-- Output waveform (teal, compressed) -->
+                            <path class="comp-wave-output" d="M 0 100 Q 50 80 100 85 T 200 90 T 300 82 T 400 98 T 500 85 T 600 90 T 700 83 T 800 90" />
+                        </svg>
+                    </div>
+                    <div class="comp-wave-labels">
+                        <div class="comp-wave-label">
+                            <div class="comp-wave-label-line input"></div>
+                            <span>Input</span>
+                        </div>
+                        <div class="comp-wave-label">
+                            <div class="comp-wave-label-line output"></div>
+                            <span>Output</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="comp-controls">
+                    <div class="comp-param">
+                        <div class="comp-param-title">Threshold</div>
+                        <div class="comp-knob threshold-active rotate-minus-90"></div>
+                        <div class="comp-param-value">-12 dB</div>
+                    </div>
+                    <div class="comp-param">
+                        <div class="comp-param-title">Ratio</div>
+                        <div class="comp-knob ratio-active rotate-45"></div>
+                        <div class="comp-param-value">3.3:1</div>
+                    </div>
+                    <div class="comp-param">
+                        <div class="comp-param-title">Attack</div>
+                        <div class="comp-knob timing-active rotate-minus-45"></div>
+                        <div class="comp-param-value">5 ms</div>
+                    </div>
+                    <div class="comp-param">
+                        <div class="comp-param-title">Release</div>
+                        <div class="comp-knob timing-active rotate-0"></div>
+                        <div class="comp-param-value">80 ms</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Sphere EQ 2 -->
+    <input type="checkbox" id="modal-eq-2" class="modal-trigger">
+    <div class="modal-overlay">
+        <label for="modal-eq-2" class="modal-backdrop"></label>
+        <div class="plugin-modal">
+            <div class="plugin-modal-header">
+                <div class="plugin-modal-title">
+                    <div class="plugin-modal-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 12h3M18 12h3M12 3v3M12 18v3M8 8l2 2M16 16l-2-2M8 16l2-2M16 8l-2 2"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <span>Sphere EQ - High Shelf</span>
+                </div>
+                <label for="modal-eq-2" class="modal-close"></label>
+            </div>
+            <div class="plugin-modal-content">
+                <div class="eq-curve-area">
+                    <div class="eq-grid"></div>
+                    <div class="eq-db-labels">
+                        <span>+12</span>
+                        <span>+6</span>
+                        <span>0</span>
+                        <span>-6</span>
+                        <span>-12</span>
+                    </div>
+                    <div class="eq-curve">
+                        <svg viewBox="0 0 800 240" preserveAspectRatio="none">
+                            <path d="M 0 150 L 200 150 L 280 150 L 360 148 Q 440 140 520 125 Q 600 105 680 85 L 800 70" />
+                        </svg>
+                    </div>
+                    <div class="eq-frequency-labels">
+                        <span>20</span>
+                        <span>50</span>
+                        <span>100</span>
+                        <span>200</span>
+                        <span>500</span>
+                        <span>1k</span>
+                        <span>2k</span>
+                        <span>5k</span>
+                        <span>10k</span>
+                        <span>20k</span>
+                    </div>
+                </div>
+                <div class="eq-controls">
+                    <div class="eq-band">
+                        <div class="eq-band-title">High Shelf</div>
+                        <div class="eq-band-params horizontal">
+                            <div class="eq-param">
+                                <div class="eq-param-label">Frequency</div>
+                                <div class="eq-knob rotate-90"></div>
+                                <div class="eq-param-value">6 kHz</div>
+                            </div>
+                            <div class="eq-param">
+                                <div class="eq-param-label">Gain</div>
+                                <div class="eq-knob active-high rotate-45"></div>
+                                <div class="eq-param-value">+3.2 dB</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eq-band">
+                        <div class="eq-band-title">Q Factor</div>
+                        <div class="eq-band-params horizontal">
+                            <div class="eq-param">
+                                <div class="eq-param-label">Quality</div>
+                                <div class="eq-knob rotate-0"></div>
+                                <div class="eq-param-value">0.85</div>
+                            </div>
+                            <div class="eq-param">
+                                <div class="eq-param-label">Bandwidth</div>
+                                <div class="eq-knob rotate-45"></div>
+                                <div class="eq-param-value">1.58 Oct</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eq-band">
+                        <div class="eq-band-title">Filter Type</div>
+                        <div class="eq-band-params vertical">
+                            <div class="eq-param">
+                                <div class="eq-param-label">Type</div>
+                                <div class="eq-dropdown">High Shelf</div>
+                            </div>
+                            <div class="eq-param">
+                                <div class="eq-param-label">Slope</div>
+                                <div class="eq-dropdown">6 dB/Oct</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
