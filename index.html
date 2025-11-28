@@ -994,6 +994,74 @@
             justify-content: space-between;
             align-items: center;
             border-radius: 16px 16px 0 0;
+            gap: 16px;
+        }
+
+        .plugin-modal-header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-listen-modal {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.6),
+                        0 0 40px rgba(0, 212, 170, 0.3);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .btn-listen-modal:hover {
+            background: linear-gradient(135deg, #00f5c4 0%, #00d4aa 100%);
+            box-shadow: 0 6px 30px rgba(0, 212, 170, 0.8),
+                        0 0 80px rgba(0, 212, 170, 0.6);
+            transform: scale(1.08);
+            animation: none;
+        }
+
+        .btn-listen-modal .signal-waves {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-listen-modal .signal-wave {
+            position: absolute;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            opacity: 0;
+            animation: wave 2s ease-out infinite;
+        }
+
+        .btn-listen-modal .signal-wave:nth-child(1) {
+            width: 30px;
+            height: 30px;
+            animation-delay: 0s;
+        }
+
+        .btn-listen-modal .signal-wave:nth-child(2) {
+            width: 30px;
+            height: 30px;
+            animation-delay: 0.5s;
+        }
+
+        .btn-listen-modal .signal-wave:nth-child(3) {
+            width: 30px;
+            height: 30px;
+            animation-delay: 1s;
         }
 
         .plugin-modal-title {
@@ -1775,7 +1843,16 @@
                     </div>
                     <span>Sphere EQ - Low Shelf</span>
                 </div>
-                <label for="modal-eq-1" class="modal-close"></label>
+                <div class="plugin-modal-header-right">
+                    <button class="btn-listen-modal">
+                        <div class="signal-waves">
+                            <div class="signal-wave"></div>
+                            <div class="signal-wave"></div>
+                            <div class="signal-wave"></div>
+                        </div>
+                    </button>
+                    <label for="modal-eq-1" class="modal-close"></label>
+                </div>
             </div>
             <div class="plugin-modal-content">
                 <div class="eq-curve-area">
@@ -1869,7 +1946,16 @@
                     </div>
                     <span>Sphere Comp - Dynamic Control</span>
                 </div>
-                <label for="modal-comp-1" class="modal-close"></label>
+                <div class="plugin-modal-header-right">
+                    <button class="btn-listen-modal">
+                        <div class="signal-waves">
+                            <div class="signal-wave"></div>
+                            <div class="signal-wave"></div>
+                            <div class="signal-wave"></div>
+                        </div>
+                    </button>
+                    <label for="modal-comp-1" class="modal-close"></label>
+                </div>
             </div>
             <div class="plugin-modal-content">
                 <div class="comp-waveform-area">
@@ -1941,7 +2027,16 @@
                     </div>
                     <span>Sphere EQ - High Shelf</span>
                 </div>
-                <label for="modal-eq-2" class="modal-close"></label>
+                <div class="plugin-modal-header-right">
+                    <button class="btn-listen-modal">
+                        <div class="signal-waves">
+                            <div class="signal-wave"></div>
+                            <div class="signal-wave"></div>
+                            <div class="signal-wave"></div>
+                        </div>
+                    </button>
+                    <label for="modal-eq-2" class="modal-close"></label>
+                </div>
             </div>
             <div class="plugin-modal-content">
                 <div class="eq-curve-area">
